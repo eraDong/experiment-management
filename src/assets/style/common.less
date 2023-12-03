@@ -1,4 +1,20 @@
 
+*{  
+    -webkit-touch-callout:none;  /*系统默认菜单被禁用*/   
+    -webkit-user-select:none; /*webkit浏览器*/   
+    -khtml-user-select:none; /*早期浏览器*/   
+    -moz-user-select:none;/*火狐*/   
+    -ms-user-select:none; /*IE10*/   
+    user-select:none;   
+} 
+
+input{  
+  -webkit-user-select:auto; /*webkit浏览器*/     
+}
+textarea{
+  -webkit-user-select:auto; /*webkit浏览器*/
+}
+
 body,ol,ul,h1,h2,h3,h4,h5,h6,p,th,td,dl,dd,form,fieldset,legend,input,textarea,select,td{margin:0;padding:0;box-sizing: border-box;}
 
 .clear::after{content:"." ;display:block;clear:both;height:0;overflow:hidden;visibility:hidden;}
@@ -29,3 +45,4 @@ img {
     color: #2980b9 !important;
 
 }
+
