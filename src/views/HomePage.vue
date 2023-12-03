@@ -1,10 +1,15 @@
 <script setup>
 import { ref } from 'vue'
+import { equipmentRenderService } from '@/api/Equipment'
 
 const searchContent = ref('')
 const centerDialogVisible = ref(false)
 const activeIndex = ref(0)
+const cardArr = ref([])
 const sortWay = ref('⬆️')
+const pagenum = ref(0)
+const pagesize = ref(0)
+const totalElements = ref(0)
 
 // const objArr = ref('')
 const sortOptions = ref([
@@ -46,6 +51,22 @@ const onSort = (item) => {
   activeIndex.value = item.id
   // isUp.value = !isUp.value
   // console.log(activeIndex.value)
+}
+
+const equipmentRender = async () => {
+  cardArr.value = await equipmentRenderService()
+  totalElements.value = cardArr.value.data.totalElements
+  pagenum.value = cardArr.value.data.pageable.pageNumber
+  pagesize.value = cardArr.value.data.pageable.pageSize
+  cardArr.value = cardArr.value.data.content
+}
+equipmentRender()
+
+const pageChange = async (e) => {
+  // console.log(e)
+  pagenum.value = e - 1
+  cardArr.value = await equipmentRenderService(pagenum.value)
+  cardArr.value = cardArr.value.data.content
 }
 </script>
 
@@ -103,15 +124,15 @@ const onSort = (item) => {
       </el-aside>
       <el-main>
         <!-- 限制一个页面最多十个 不然页面会发生拉伸现象 -->
-        <el-card v-for="item in 10" :key="item" @click="onCard">
-          <div class="name">嘴部固定器</div>
+        <el-card v-for="item in cardArr" :key="item" @click="onCard">
+          <div class="name">{{ item.name }}</div>
           <div class="image">
             <img @dragstart.prevent src="@/assets/equipment1.png" alt="" />
           </div>
-          <div class="id">ID : 1</div>
-          <div class="count">Amount : 1</div>
-          <div class="department">Category : Jigsaw</div>
-          <div class="damaged">Status : Avaliable</div>
+          <div class="id">ID : {{ item.id }}</div>
+          <!-- <div class="count">Amount : {{ item.amount }}</div> -->
+          <div class="department">Category : {{ item.category }}</div>
+          <div class="damaged">Status : {{ item.status }}</div>
           <div class="buttons">
             <el-button type="text" @click.stop="onEdit">edit</el-button>
             <el-button type="text" @click.stop="onDelete">delete</el-button>
@@ -119,11 +140,12 @@ const onSort = (item) => {
         </el-card>
         <el-pagination
           :hide-on-single-page="true"
-          :page-size="6"
-          :pager-count="6"
           layout="prev, pager, next"
-          :total="12"
+          :total="totalElements"
           background="true"
+          @next-click="pageNext"
+          @prev-click="pagePrev"
+          @current-change="pageChange"
         />
       </el-main>
     </el-container>
@@ -246,6 +268,10 @@ const onSort = (item) => {
       color: #2980b9;
     }
     background-color: #2c3e50;
+  }
+
+  .el-pagination {
+    width: 100%;
   }
 }
 </style>
