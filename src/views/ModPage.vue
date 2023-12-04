@@ -2,6 +2,39 @@
 import { ref } from 'vue'
 
 const isMod = ref(false)
+const upload = ref('')
+
+// upload image
+
+import { ElMessage } from 'element-plus'
+
+let imageUrl = ref('')
+const uploadImage = (file, fileList) => {
+  // 获取上传的文件对象（File 对象）
+  const uploadedFile = fileList[0].raw
+
+  // console.log(uploadedFile)
+  // 在这里可以进行你的操作，比如显示图片预览
+  if (uploadedFile instanceof File) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      imageUrl.value = e.target.result
+    }
+    reader.readAsDataURL(uploadedFile)
+  }
+  upload.value.clearFiles()
+}
+
+const beforeAvatarUpload = (rawFile) => {
+  if (rawFile.type !== 'image/jpeg' && rawFile.type !== 'image/png') {
+    ElMessage.error('Avatar picture must be JPG/PNG format!')
+    return false
+  } else if (rawFile.size / 1024 / 1024 > 2) {
+    ElMessage.error('Avatar picture size can not exceed 2MB!')
+    return false
+  }
+  return true
+}
 </script>
 
 <template>
@@ -15,9 +48,23 @@ const isMod = ref(false)
     <el-main>
       <div class="title">ADD your equipment</div>
       <div class="basic">
+        <div class="name">Name : <el-input></el-input></div>
         <div class="amount">Amount : <el-input></el-input></div>
         <div class="category">Category : <el-input></el-input></div>
         <div class="status">Status : <el-input></el-input></div>
+      </div>
+      <div class="upload-image">
+        <el-upload
+          class="avatar-uploader"
+          :show-file-list="false"
+          @change="uploadImage"
+          :auto-upload="false"
+          :before-upload="beforeAvatarUpload"
+          ref="upload"
+        >
+          <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+          <el-icon v-else class="avatar-uploader-icon">+</el-icon>
+        </el-upload>
       </div>
       <div class="descrip">
         <div class="description">
@@ -69,6 +116,7 @@ const isMod = ref(false)
 
     color: #2980b9;
     border-radius: 5px;
+
     .title {
       font-weight: 700;
       margin-bottom: 30px;
@@ -76,6 +124,17 @@ const isMod = ref(false)
     .basic {
       display: flex;
       justify-content: space-between;
+      .name {
+        .el-input {
+          width: 215px;
+          :deep(.el-input__wrapper) {
+            background-color: transparent;
+          }
+          :deep(.el-input__inner) {
+            color: #2980b9;
+          }
+        }
+      }
       .amount {
         .el-input {
           width: 215px;
@@ -143,6 +202,31 @@ const isMod = ref(false)
       .warn {
         font-weight: 700;
         color: #b92929;
+      }
+    }
+
+    .upload-image {
+      width: 178px;
+      cursor: pointer;
+      border: 1px dashed rgb(104, 100, 100);
+      .avatar-uploader .el-upload {
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: var(--el-transition-duration-fast);
+      }
+
+      .avatar-uploader .el-upload:hover {
+        border-color: var(--el-color-primary);
+      }
+
+      .el-icon.avatar-uploader-icon {
+        font-size: 28px;
+        color: #8c939d;
+        width: 178px;
+        height: 178px;
+        text-align: center;
       }
     }
   }

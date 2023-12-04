@@ -24,6 +24,9 @@ public class EquipModel {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("image")
+    private String image;  // 新增的属性
+
 //    @JsonProperty("amount")
 //    private long amount;
 
@@ -81,4 +84,11 @@ public class EquipModel {
     }
 
 
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getImage() {
+        return image;
+    }
 }
