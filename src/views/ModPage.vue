@@ -1,12 +1,26 @@
 <script setup>
 import { ref } from 'vue'
+import { AdminLoginService } from '@/api/Admin.js'
+import { ElMessage } from 'element-plus'
+import { equipmentAddService } from '@/api/Equipment.js'
 
 const isMod = ref(false)
 const upload = ref('')
+const AdminPassword = ref('')
+const formName = ref('')
+const formAmount = ref('')
+const formCategory = ref('')
+const formStatus = ref('')
+const formDescription = ref('')
 
-// upload image
+const enterAdmin = async () => {
+  const res = await AdminLoginService(AdminPassword.value)
 
-import { ElMessage } from 'element-plus'
+  if (res.data.status === 'success') {
+    isMod.value = true
+  }
+  AdminPassword.value = ''
+}
 
 let imageUrl = ref('')
 const uploadImage = (file, fileList) => {
@@ -19,9 +33,11 @@ const uploadImage = (file, fileList) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       imageUrl.value = e.target.result
+      // console.log(imageUrl.value)
     }
     reader.readAsDataURL(uploadedFile)
   }
+
   upload.value.clearFiles()
 }
 
@@ -35,23 +51,66 @@ const beforeAvatarUpload = (rawFile) => {
   }
   return true
 }
+
+const base64ToFile = (urlData, fileIndex = 1) => {
+  let arr = urlData.split(',')
+  let mime = arr[0].match(/:(.*?);/)[1]
+  let bytes = atob(arr[1]) // 解码base64
+  let n = bytes.length
+  let ia = new Uint8Array(n)
+  while (n--) {
+    ia[n] = bytes.charCodeAt(n)
+  }
+
+  // 构造新的文件名，例如：file_1.png, file_2.png, ...
+  let fileName = `file_${fileIndex}.png`
+
+  return new File([ia], fileName, { type: mime })
+}
+
+const onSubmit = async () => {
+  const file = base64ToFile(imageUrl.value)
+  await equipmentAddService({
+    name: formName.value,
+    category: formCategory.value,
+    status: formStatus.value,
+    image: file,
+    description: formDescription.value
+  })
+  formDescription.value = ''
+  formName.value = ''
+  formCategory.value = ''
+  formStatus.value = ''
+  imageUrl.value = ''
+}
 </script>
 
 <template>
   <el-container>
     <el-aside>
-      <div class="mod-input">
+      <div class="mod-input" v-if="isMod === false">
         <div class="title">Please input your mod key</div>
-        <div class="input"><el-input></el-input></div>
+        <div class="input">
+          <el-input
+            v-model="AdminPassword"
+            @keyup.enter="enterAdmin"
+          ></el-input>
+        </div>
       </div>
     </el-aside>
     <el-main>
       <div class="title">ADD your equipment</div>
       <div class="basic">
-        <div class="name">Name : <el-input></el-input></div>
-        <div class="amount">Amount : <el-input></el-input></div>
-        <div class="category">Category : <el-input></el-input></div>
-        <div class="status">Status : <el-input></el-input></div>
+        <div class="name">Name : <el-input v-model="formName"></el-input></div>
+        <div class="amount">
+          Amount : <el-input v-model="formAmount"></el-input>
+        </div>
+        <div class="category">
+          Category : <el-input v-model="formCategory"></el-input>
+        </div>
+        <div class="status">
+          Status : <el-input v-model="formStatus"></el-input>
+        </div>
       </div>
       <div class="upload-image">
         <el-upload
@@ -69,11 +128,22 @@ const beforeAvatarUpload = (rawFile) => {
       <div class="descrip">
         <div class="description">
           Description :
-          <el-input type="textarea" :rows="4" resize="none"></el-input>
+          <el-input
+            type="textarea"
+            :rows="4"
+            resize="none"
+            v-model="formDescription"
+          ></el-input>
         </div>
       </div>
       <div class="btn">
-        <el-button type="primary" round>Submit</el-button>
+        <el-button
+          type="primary"
+          round
+          v-if="isMod === true"
+          @click.prevent="onSubmit"
+          >Submit</el-button
+        >
         <div class="warn" v-if="isMod === false">
           🔒 GET THE PERMISSION FIRST
         </div>
@@ -197,7 +267,7 @@ const beforeAvatarUpload = (rawFile) => {
       justify-content: space-between;
       .el-button {
         background-color: #2980b9;
-        color: #2c3e50;
+        color: #fff;
       }
       .warn {
         font-weight: 700;

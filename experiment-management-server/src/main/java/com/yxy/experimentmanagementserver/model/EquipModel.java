@@ -39,6 +39,18 @@ public class EquipModel {
         createTime = LocalDateTime.now();
     }
 
+    @Override
+    public String toString() {
+        return "EquipModel{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", status='" + status + '\'' +
+                ", description='" + description + '\'' +
+                ", createTime=" + createTime +
+                '}';
+    }
+
     // 省略其他构造函数和方法...
 
     // Getter 和 Setter 方法...

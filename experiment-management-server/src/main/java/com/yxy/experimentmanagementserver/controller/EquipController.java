@@ -2,11 +2,14 @@ package com.yxy.experimentmanagementserver.controller;
 
 import com.yxy.experimentmanagementserver.model.EquipModel;
 import com.yxy.experimentmanagementserver.repository.EquipRepository;
+import com.yxy.experimentmanagementserver.specification.EquipSpecification;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ResourceUtils;
@@ -19,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/experiment")
+    @RequestMapping("/experiment")
 public class EquipController {
 
     @Autowired
@@ -96,25 +99,45 @@ public class EquipController {
     }
 
 
+
+
     @GetMapping("/search")
     public ResponseEntity<Page<EquipModel>> searchEquipments(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String nameLike,
-            @RequestParam(required = false) String categoryLike,
-            @RequestParam(required = false) String statusLike,
+
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
 
-        // 使用 Spring Data 默认的 findAll 方法，该方法已经支持分页
-        Page<EquipModel> equipmentPage = equipmentRepository.findAll(pageable);
+        Specification<EquipModel> spec = (root, query, criteriaBuilder) -> {
+            Predicate predicate = criteriaBuilder.conjunction();
+
+            if (id != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("id"), id));
+            }
+            if (name != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("name"), name));
+            }
+            if (category != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("category"), category));
+            }
+            if (status != null) {
+                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(root.get("status"), status));
+            }
+
+
+            return predicate;
+        };
+
+        Page<EquipModel> equipmentPage = equipmentRepository.findAll(spec, pageable);
 
         return ResponseEntity.ok(equipmentPage);
     }
+
 
 
 }

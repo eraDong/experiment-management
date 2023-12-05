@@ -124,6 +124,7 @@ const onSort = (item) => {
   //排序逻辑
   const sortedArr = cardArr.value.slice()
   if (activeIndex.value === 0) {
+    equipmentRender()
     sortedArr.sort(sortBy('id'))
   } else {
     if (sortWay.value === '⬆️') {
@@ -168,12 +169,10 @@ const onSearch = async () => {
     }
 
     const searchResult = await equipmentSearchService(searchParams)
-    console.log(searchResult.data)
     totalElements.value = searchResult.data.totalElements
     pagenum.value = searchResult.data.pageable.pageNumber
     pagesize.value = searchResult.data.pageable.pageSize
     cardArr.value = searchResult.data.content
-    console.log(cardArr.value)
   }
 
   // 重置搜索内容
@@ -207,7 +206,7 @@ const handleCommand = (command) => {
           </template>
         </el-dropdown>
 
-        <el-input v-model="searchContent"></el-input>
+        <el-input v-model="searchContent" @keyup.enter="onSearch()"></el-input>
 
         <el-button class="search" @click="onSearch()">Search</el-button>
 
@@ -233,8 +232,10 @@ const handleCommand = (command) => {
           </ul>
         </div>
       </el-aside>
-      <el-main>
+
+      <el-main v-if="cardArr.length !== 0">
         <!-- 限制一个页面最多十个 不然页面会发生拉伸现象 -->
+
         <el-card v-for="item in cardArr" :key="item" @click="onCard(item.id)">
           <div class="name">{{ item.name }}</div>
           <div class="image">
@@ -266,6 +267,7 @@ const handleCommand = (command) => {
             >
           </div>
         </el-card>
+
         <el-pagination
           :hide-on-single-page="true"
           layout="prev, pager, next"
@@ -276,6 +278,7 @@ const handleCommand = (command) => {
           @current-change="pageChange"
         />
       </el-main>
+      <el-empty description="No Result" v-else />
     </el-container>
 
     <!-- describe of the equipment -->
@@ -320,10 +323,11 @@ const handleCommand = (command) => {
     .el-input {
       width: 130px;
       margin-left: 15px;
+      color: #2980b9;
       :deep(.el-input__wrapper) {
         background-color: transparent;
       }
-      :deep(.el-inpu t__inner) {
+      :deep(.el-input__inner) {
         color: #2980b9;
       }
     }
@@ -419,6 +423,20 @@ const handleCommand = (command) => {
 
   .el-pagination {
     width: 100%;
+  }
+
+  .el-empty {
+    width: 100%;
+    height: 550px;
+    --el-empty-fill-color-1: #5e5e5e;
+    --el-empty-fill-color-2: #757575;
+    --el-empty-fill-color-3: #807d7d;
+    --el-empty-fill-color-4: #838282;
+    --el-empty-fill-color-5: #9e9d9d;
+    --el-empty-fill-color-6: #888787;
+    --el-empty-fill-color-7: rgb(129, 127, 127);
+    --el-empty-fill-color-8: #5e5e5e;
+    --el-empty-fill-color-9: #9b9999;
   }
 }
 </style>
