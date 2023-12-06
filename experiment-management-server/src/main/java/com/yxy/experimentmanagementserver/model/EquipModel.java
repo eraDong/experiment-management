@@ -15,11 +15,11 @@ public class EquipModel {
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("name")
+    @JsonProperty(value = "name", required = true)
     private String name;
-    @JsonProperty("category")
+    @JsonProperty(value = "category", required = true)
     private String category;
-    @JsonProperty("status")
+    @JsonProperty(value = "status", required = true)
     private String status;
     @JsonProperty("description")
     private String description;

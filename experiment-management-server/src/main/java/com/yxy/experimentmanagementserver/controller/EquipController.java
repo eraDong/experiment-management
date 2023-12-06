@@ -15,11 +15,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
     @RequestMapping("/experiment")
@@ -37,15 +39,82 @@ public class EquipController {
         return ResponseEntity.ok(equipmentPage);
     }
 
+    // 根据 ID 查找物品属性接口
+    @GetMapping("/equipment/{id}")
+    public ResponseEntity<EquipModel> getEquipmentById(@PathVariable Long id) {
+        return equipmentRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipment not found with id: " + id));
+    }
 
-    // 创建设备接口
+    // 编辑设备接口
+    @PutMapping("/edit-equipment/{id}")
+    public ResponseEntity<EquipModel> editEquipment(
+            @PathVariable Long id,
+            @RequestPart("image") MultipartFile imageFile,
+            @RequestParam("name") String name,
+            @RequestParam("category") String category,
+            @RequestParam("status") String status,
+            @RequestParam("description") String description
+    ) {
+        // 根据ID查找要编辑的设备
+        Optional<EquipModel> existingEquipmentOptional = equipmentRepository.findById(id);
+
+        if (existingEquipmentOptional.isPresent()) {
+            EquipModel existingEquipment = existingEquipmentOptional.get();
+
+            // 更新设备的属性
+            existingEquipment.setName(name);
+            existingEquipment.setCategory(category);
+            existingEquipment.setStatus(status);
+            existingEquipment.setDescription(description);
+
+            // 处理文件上传
+            if (imageFile != null && !imageFile.isEmpty()) {
+                try {
+                    // 获取 uploads/equipImage 目录的路径
+                    File uploadsDirectory = new File("uploads/equipImage");
+                    if (!uploadsDirectory.exists()) {
+                        uploadsDirectory.mkdirs();  // 如果目录不存在，创建目录
+                    }
+
+                    String uploadDir = uploadsDirectory.getAbsolutePath();
+
+                    // 构建保存文件的完整路径
+                    String fileName = uploadDir + File.separator + imageFile.getOriginalFilename();
+                    File dest = new File(fileName);
+
+                    // 保存文件到指定路径
+                    imageFile.transferTo(dest);
+
+                    // 设置 EquipModel 对象的 image 属性
+                    existingEquipment.setImage("equipImage/" + imageFile.getOriginalFilename());
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // 处理文件保存失败的异常
+                }
+            }
+
+            // 保存更新后的设备
+            EquipModel savedEquipment = equipmentRepository.save(existingEquipment);
+
+            return ResponseEntity.ok(savedEquipment);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+
     @PostMapping("/create-equipment")
     public EquipModel createEquipment(
             @RequestParam("name") String name,
             @RequestParam("category") String category,
             @RequestParam("status") String status,
             @RequestParam("description") String description,
-            @RequestPart("image") MultipartFile imageFile
+            @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) {
         EquipModel equipment = new EquipModel();
         equipment.setName(name);
@@ -53,7 +122,7 @@ public class EquipController {
         equipment.setStatus(status);
         equipment.setDescription(description);
 
-        if (!imageFile.isEmpty()) {
+        if (imageFile != null && !imageFile.isEmpty()) {
             try {
                 // 获取 uploads/equipImage 目录的路径
                 File uploadsDirectory = new File("uploads/equipImage");
@@ -84,6 +153,7 @@ public class EquipController {
         // 保存设备信息
         return equipmentRepository.save(equipment);
     }
+
 
 
 

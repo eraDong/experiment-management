@@ -3,12 +3,17 @@ import { ref } from 'vue'
 import {
   equipmentRenderService,
   equipmentDeleteService,
-  equipmentSearchService
+  equipmentSearchService,
+  equipmentGetByIdService,
+  equipmentEditService
 } from '@/api/Equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchContent = ref('')
-const centerDialogVisible = ref(false)
+const cardVision = ref(false)
+const editVision = ref(false)
 const activeIndex = ref(0)
 const cardArr = ref([])
 const sortWay = ref('⬆️')
@@ -18,6 +23,16 @@ const totalElements = ref(0)
 const descriptionContent = ref('')
 const equipCreateTime = ref('')
 const selectedSearch = ref('id')
+const editUploadImage = ref('')
+
+//edit attribute
+const editName = ref('')
+const editId = ref('')
+const editDescription = ref('')
+const editCategory = ref('')
+const editStatus = ref('')
+const editImage = ref('')
+const displaybackImage = ref('')
 
 function sortBy(property) {
   return function (a, b) {
@@ -35,7 +50,7 @@ function sortBy(property) {
   }
 }
 
-function sortByDescending(property) {
+const sortByDescending = (property) => {
   return function (a, b) {
     // Use the property to compare
     const valueA = a[property]
@@ -71,14 +86,57 @@ const sortOptions = ref([
   }
 ])
 
-const onEdit = () => {
-  console.log('edit')
+const onEdit = async (id) => {
+  editVision.value = true
+  const res = await equipmentGetByIdService(id)
+  editId.value = id
+  editName.value = res.data.name
+  editStatus.value = res.data.status
+  editCategory.value = res.data.category
+  editDescription.value = res.data.description
+  editImage.value = res.data.image
+}
+
+const closeEdit = async () => {
+  // console.log('close')
+  let imgFile = ''
+  if (!(editImage.value instanceof File)) {
+    const response = await fetch(
+      `../../experiment-management-server/uploads/${editImage.value}`
+    )
+    const fileBlob = await response.blob()
+    imgFile = new File([fileBlob], `file_${editId.value}.png`, {
+      type: fileBlob.type
+    })
+  }
+
+  await equipmentEditService(editId.value, {
+    name: editName.value,
+    category: editCategory.value,
+    status: editStatus.value,
+    description: editDescription.value,
+    image: editImage.value instanceof File ? editImage.value : imgFile
+  })
+
+  // await equipmentRender()
+  router.go(0)
+}
+
+const editUploadImageChange = (response) => {
+  let imgFile = new File([response.raw], `file_${editId.value}.png`)
+  if (imgFile) {
+    const reader = new FileReader()
+    reader.onload = function (e) {
+      const previewImage = document.getElementById('previewImage')
+      previewImage.src = e.target.result
+    }
+
+    reader.readAsDataURL(imgFile)
+  }
+  editImage.value = imgFile
 }
 
 const onDelete = async (id) => {
-  // console.log('delete')
-  // await equipmentDeleteService(id)
-  // console.log(id)
   ElMessageBox.confirm('Continue to delete?', 'Warning', {
     confirmButtonText: 'OK',
     cancelButtonText: 'Cancel',
@@ -100,7 +158,7 @@ const onDelete = async (id) => {
 }
 
 const onCard = (id) => {
-  centerDialogVisible.value = true
+  cardVision.value = true
   // 申请描述内容
   // console.log(cardArr)
 
@@ -239,13 +297,7 @@ const handleCommand = (command) => {
         <el-card v-for="item in cardArr" :key="item" @click="onCard(item.id)">
           <div class="name">{{ item.name }}</div>
           <div class="image">
-            <img
-              class="default-img"
-              @dragstart.prevent
-              src="@/assets/default-equipment.png"
-              alt=""
-              v-if="!item.image"
-            />
+            <div v-if="!item.image" class="noImage">No Image Yet</div>
             <img
               @dragstart.prevent
               :src="`/experiment-management-server/uploads/${item.image}`"
@@ -282,16 +334,48 @@ const handleCommand = (command) => {
     </el-container>
 
     <!-- describe of the equipment -->
+    <el-dialog v-model="cardVision" title="Description" width="30%" center>
+      <span> Description : {{ descriptionContent }} </span>
+      <div>CreateTime : {{ equipCreateTime }}</div>
+      <template #footer>
+        <span class="dialog-footer"> </span>
+      </template>
+    </el-dialog>
+
     <el-dialog
-      v-model="centerDialogVisible"
-      title="Description"
+      v-model="editVision"
+      title="Edit"
       width="30%"
       center
+      @close="closeEdit()"
     >
-      <span>
-        {{ descriptionContent }}
-      </span>
-      <div>CreateTime : {{ equipCreateTime }}</div>
+      <img
+        id="previewImage"
+        :src="`../../experiment-management-server/uploads/${
+          /^\/equipImage\//.test(editImage) ? displaybackImage : editImage
+        }`"
+        alt=""
+      />
+
+      <el-upload
+        class="avatar-uploader"
+        :show-file-list="false"
+        @change="editUploadImageChange"
+        :auto-upload="false"
+        :before-upload="beforeAvatarUpload"
+        ref="editUploadImage"
+      >
+        <el-icon class="avatar-uploader-icon">change</el-icon>
+      </el-upload>
+
+      <div class="cardId">ID : {{ editId }}</div>
+      <div class="cardAttribute">
+        Name : <el-input v-model="editName"></el-input> Category :
+        <el-input v-model="editCategory"></el-input> Status :
+        <el-input v-model="editStatus"></el-input>
+        Description : <el-input v-model="editDescription"></el-input>
+      </div>
+      <div class="cardImage"></div>
       <template #footer>
         <span class="dialog-footer"> </span>
       </template>
@@ -390,6 +474,12 @@ const handleCommand = (command) => {
         text-align: center;
       }
       .image {
+        .noImage {
+          text-align: center;
+          width: 200px;
+          height: 150px;
+          line-height: 150px;
+        }
         img {
           width: 200px;
           height: 150px;
@@ -419,6 +509,21 @@ const handleCommand = (command) => {
       color: #2980b9;
     }
     background-color: #2c3e50;
+    img {
+      border-radius: 5px;
+    }
+  }
+
+  .cardAttribute {
+    .el-input {
+      color: #2980b9;
+      :deep(.el-input__wrapper) {
+        background-color: transparent !important;
+      }
+      :deep(.el-input__inner) {
+        color: #2980b9 !important;
+      }
+    }
   }
 
   .el-pagination {

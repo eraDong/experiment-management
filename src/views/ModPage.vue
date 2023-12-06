@@ -2,9 +2,10 @@
 import { ref } from 'vue'
 import { AdminLoginService } from '@/api/Admin.js'
 import { ElMessage } from 'element-plus'
-import { equipmentAddService } from '@/api/Equipment.js'
+import { equipmentAddService, equipmentRenderService } from '@/api/Equipment.js'
+import { useAdminStore } from '@/stores'
 
-const isMod = ref(false)
+const useAdmin = useAdminStore()
 const upload = ref('')
 const AdminPassword = ref('')
 const formName = ref('')
@@ -17,7 +18,7 @@ const enterAdmin = async () => {
   const res = await AdminLoginService(AdminPassword.value)
 
   if (res.data.status === 'success') {
-    isMod.value = true
+    useAdmin.setMod(true)
   }
   AdminPassword.value = ''
 }
@@ -62,33 +63,44 @@ const base64ToFile = (urlData, fileIndex = 1) => {
     ia[n] = bytes.charCodeAt(n)
   }
 
-  // 构造新的文件名，例如：file_1.png, file_2.png, ...
   let fileName = `file_${fileIndex}.png`
 
   return new File([ia], fileName, { type: mime })
 }
 
 const onSubmit = async () => {
-  const file = base64ToFile(imageUrl.value)
-  await equipmentAddService({
-    name: formName.value,
-    category: formCategory.value,
-    status: formStatus.value,
-    image: file,
-    description: formDescription.value
-  })
+  const res = await equipmentRenderService()
+  const file =
+    imageUrl.value === ''
+      ? ''
+      : base64ToFile(imageUrl.value, res.data.content.length + 1)
+
+  for (let i = 1; i <= formAmount.value; i++) {
+    await equipmentAddService({
+      name: formName.value,
+      category: formCategory.value,
+      status: formStatus.value,
+      image: file,
+      description: formDescription.value
+    })
+  }
+  formAmount.value = ''
   formDescription.value = ''
   formName.value = ''
   formCategory.value = ''
   formStatus.value = ''
   imageUrl.value = ''
 }
+
+const logout = () => {
+  useAdmin.removeMod()
+}
 </script>
 
 <template>
   <el-container>
     <el-aside>
-      <div class="mod-input" v-if="isMod === false">
+      <div class="mod-input" v-if="useAdmin.isMod === false">
         <div class="title">Please input your mod key</div>
         <div class="input">
           <el-input
@@ -97,6 +109,7 @@ const onSubmit = async () => {
           ></el-input>
         </div>
       </div>
+      <div class="log-out" v-else @click="logout">Log out</div>
     </el-aside>
     <el-main>
       <div class="title">ADD your equipment</div>
@@ -140,11 +153,11 @@ const onSubmit = async () => {
         <el-button
           type="primary"
           round
-          v-if="isMod === true"
+          v-if="useAdmin.isMod === true"
           @click.prevent="onSubmit"
           >Submit</el-button
         >
-        <div class="warn" v-if="isMod === false">
+        <div class="warn" v-if="useAdmin.isMod === false">
           🔒 GET THE PERMISSION FIRST
         </div>
       </div>
@@ -176,6 +189,20 @@ const onSubmit = async () => {
           }
         }
       }
+    }
+
+    .log-out {
+      width: 200px;
+      border-radius: 5px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      background-color: #2c3e50;
+      color: #2980b9;
+      font-weight: 700;
+    }
+    .log-out:hover {
+      background-color: #253444 !important;
     }
   }
 
