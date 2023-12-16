@@ -70,10 +70,14 @@ const base64ToFile = (urlData, fileIndex = 1) => {
 
 const onSubmit = async () => {
   const res = await equipmentRenderService()
+
   const file =
     imageUrl.value === ''
       ? ''
-      : base64ToFile(imageUrl.value, res.data.content.length + 1)
+      : base64ToFile(
+          imageUrl.value,
+          res.data.content[res.data.content.length - 1].id + 1
+        )
 
   for (let i = 1; i <= formAmount.value; i++) {
     await equipmentAddService({

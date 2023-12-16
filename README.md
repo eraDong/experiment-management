@@ -1,35 +1,15 @@
 # experiment-management
 
-This template should help get you started developing with Vue 3 in Vite.
+2023.12 计算机科学与技术专业综合课程设计
 
-## Recommended IDE Setup
+# setup envrionment
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+node.js
 
-## Customize configuration
+vue.js
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+# setup procedure
 
-## Project Setup
-
-```sh
 pnpm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
 pnpm dev
-```
-
-### Compile and Minify for Production
-
-```sh
-pnpm build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
