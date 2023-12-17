@@ -299,12 +299,10 @@ const handleCommand = (command) => {
         <el-card v-for="item in cardArr" :key="item" @click="onCard(item.id)">
           <div class="name">{{ item.name }}</div>
           <div class="image">
-            <div v-if="!item.image" class="noImage">No Image Yet</div>
             <img
               @dragstart.prevent
               :src="`/experiment-management-server/uploads/${item.image}`"
-              alt=""
-              v-else
+              alt="No image yet"
             />
           </div>
 
@@ -313,7 +311,10 @@ const handleCommand = (command) => {
           <div class="department">Category : {{ item.category }}</div>
           <div class="damaged">Status : {{ item.status }}</div>
           <div class="buttons">
-            <el-button type="text" @click.stop="onEdit(item.id)"
+            <el-button
+              type="text"
+              v-if="useAdmin.isMod === true"
+              @click.stop="onEdit(item.id)"
               >edit</el-button
             >
             <el-button
