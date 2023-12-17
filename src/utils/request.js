@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-const baseURL = 'http://localhost:8080'
+const baseURL = 'http://8.222.176.242:10002'
 
 const instance = axios.create({
   // TODO 1. 基础地址，超时时间
@@ -15,7 +15,7 @@ instance.interceptors.request.use(
   },
   (err) => {
     // TODO 5. 处理401错误
-    ElMessage.error(err.response.data.message || 'ERROR')
+    ElMessage.error('ERROR')
     return Promise.reject(err)
   }
 )
@@ -29,7 +29,7 @@ instance.interceptors.response.use(
   },
   (err) => {
     // TODO 5. 处理401错误
-    ElMessage.error(err.response.data.message || 'ERROR')
+    ElMessage.error('ERROR')
     return Promise.reject(err)
   }
 )

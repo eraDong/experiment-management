@@ -9,8 +9,10 @@ import {
 } from '@/api/Equipment'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { useAdminStore } from '@/stores'
 
 const router = useRouter()
+const useAdmin = useAdminStore()
 const searchContent = ref('')
 const cardVision = ref(false)
 const editVision = ref(false)
@@ -314,7 +316,10 @@ const handleCommand = (command) => {
             <el-button type="text" @click.stop="onEdit(item.id)"
               >edit</el-button
             >
-            <el-button type="text" @click.stop="onDelete(item.id)"
+            <el-button
+              type="text"
+              v-if="useAdmin.isMod === true"
+              @click.stop="onDelete(item.id)"
               >delete</el-button
             >
           </div>
