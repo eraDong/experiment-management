@@ -302,7 +302,7 @@ const handleCommand = (command) => {
             <img
               @dragstart.prevent
               :src="`/experiment-management-server/uploads/${item.image}`"
-              alt="No image yet"
+              alt=""
             />
           </div>
 
